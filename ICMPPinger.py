@@ -85,8 +85,7 @@ def doOnePing(destAddr, timeout):
 #SOCK_RAW is a powerful socket type. For more details see:
 #http://sock-raw.org/papers/sock_raw
     #Fill in start
-    try:
-        
+    mySocket= socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
     #Create Socket here
     #Fill in end
     myID = os.getpid() & 0xFFFF  #Return the current process i
