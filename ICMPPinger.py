@@ -69,10 +69,10 @@ def sendOnePing(mySocket, destAddr, ID):
     myChecksum = checksum(header + data)
     # Get the right checksum, and put in the header
     if sys.platform == 'darwin':
-        myChecksum = socket.htons(myChecksum) & 0xffff
+        myChecksum = htons(myChecksum) & 0xffff
         #Convert 16-bit integers from host to network byte order.
     else:
-        myChecksum = socket.htons(myChecksum)
+        myChecksum = htons(myChecksum)
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
     packet = header + data
     mySocket.sendto(packet, (destAddr, 1)) # AF_INET address must be tuple, not str
@@ -81,11 +81,11 @@ def sendOnePing(mySocket, destAddr, ID):
 
 
 def doOnePing(destAddr, timeout):
-    icmp = socket.getprotobyname("icmp")
+    icmp = getprotobyname("icmp")
 #SOCK_RAW is a powerful socket type. For more details see:
 #http://sock-raw.org/papers/sock_raw
     #Fill in start
-    mySocket= socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+    mySocket = socket(AF_INET, SOCK_RAW, icmp)
     #Create Socket here
     #Fill in end
     myID = os.getpid() & 0xFFFF  #Return the current process i
@@ -97,8 +97,7 @@ def doOnePing(destAddr, timeout):
 
 def ping(host, timeout=1):
     #timeout=1 means: If one second goes by without a reply from the server,
-    #the client assumes that either the client’s ping or the server’s pong is lost
-    dest = socket.gethostbyname(host)
+    dest = gethostbyname(host)
     print "Pinging " + dest + " using Python:"
     print ""
     #Send ping requests to a server separated by approximately one second
