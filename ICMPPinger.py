@@ -106,6 +106,6 @@ def ping(host, timeout=1):
         delay = doOnePing(dest, timeout)
         print delay
         time.sleep(1)# one second
-return delay
+    return delay
 ping("127.0.0.1")
 ping("www.poly.edu")
