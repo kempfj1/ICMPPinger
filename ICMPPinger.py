@@ -43,16 +43,15 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
         timeReceived = time.time()
         recPacket, addr = mySocket.recvfrom(1024)
-        #Fill in start
         icmpHeader= recPacket[20:28]
         type, code, checksum, packID, sequence = struct.unpack("bbHHh", icmpHeader)
+
         #Fetch the ICMP header from the IP packet
         if packID == ID:
             doubleBytes= struct.calcsize("d")
             sentTime = struct.unpack("d", recPacket[28:28 + doubleBytes])[0]
             return timeReceived - sentTime
 
-        #Fill in end
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
             return "Request timed out."
@@ -84,10 +83,7 @@ def doOnePing(destAddr, timeout):
     icmp = getprotobyname("icmp")
 #SOCK_RAW is a powerful socket type. For more details see:
 #http://sock-raw.org/papers/sock_raw
-    #Fill in start
     mySocket = socket(AF_INET, SOCK_RAW, icmp)
-    #Create Socket here
-    #Fill in end
     myID = os.getpid() & 0xFFFF  #Return the current process i
     sendOnePing(mySocket, destAddr, myID)
     delay = receiveOnePing(mySocket, myID, timeout, destAddr)
@@ -97,29 +93,35 @@ def doOnePing(destAddr, timeout):
 
 def ping(host, timeout=1):
     #timeout=1 means: If one second goes by without a reply from the server, ping or pong is lost
-    dest = gethostbyname(host)
+
+    #setting up thingies
     delay = 0
     count = 0
-    min =   0
-    max =   0
-    print "Pinging " + dest + " using Python:"
+    min = 0
+    max = 0
+
+    dest = gethostbyname(host)
+    print "Pinging " + host + "(" + dest + ")" + " using Python:"
     print ""
+
     #Send ping requests to a server separated by approximately one second
     while count < 10 :
         count += 1
         tempDelay = doOnePing(dest, timeout)
         delay += tempDelay
 
+        #update min and max
         if tempDelay < min:
             min = tempDelay
         if tempDelay > max:
             max = tempDelay
-        #print delay
-        time.sleep(1)# one second
+
+        time.sleep(1)#nap time
+
     print"Min RTT: " + str(min)
     print"Max RTT: " + str(max)
     print"Average RTT: " + str(delay/count)
 
 
     return delay
-ping("localhost")
+ping("www.google.com")
