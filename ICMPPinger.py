@@ -96,15 +96,30 @@ def doOnePing(destAddr, timeout):
 
 
 def ping(host, timeout=1):
-    #timeout=1 means: If one second goes by without a reply from the server,
+    #timeout=1 means: If one second goes by without a reply from the server, ping or pong is lost
     dest = gethostbyname(host)
+    delay = 0
+    count = 0
+    min =   0
+    max =   0
     print "Pinging " + dest + " using Python:"
     print ""
     #Send ping requests to a server separated by approximately one second
-    while 1 :
-        delay = doOnePing(dest, timeout)
-        print delay
+    while count < 10 :
+        count += 1
+        tempDelay = doOnePing(dest, timeout)
+        delay += tempDelay
+
+        if tempDelay < min:
+            min = tempDelay
+        if tempDelay > max:
+            max = tempDelay
+        #print delay
         time.sleep(1)# one second
+    print"Min RTT: " + str(min)
+    print"Max RTT: " + str(max)
+    print"Average RTT: " + str(delay/count)
+
+
     return delay
-ping("127.0.0.1")
-ping("www.poly.edu")
+ping("localhost")
