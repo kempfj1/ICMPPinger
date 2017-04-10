@@ -9,6 +9,16 @@ import binascii
 
 ICMP_ECHO_REQUEST = 8
 
+#Make a table of ICMP error codes for easy lookup
+errormessage = dict({0:"Destination Network Unreachable", 1:"Destination Host Unreachable",
+                   2:"Destination Protocol Unreachable", 3:"Destination Port Unreachable", 4:"Fragmentation Required",
+                   5:"Source Route Failed", 6:"Destination Network Unknown", 7:"Destination Host Unknown",
+                   8:"Source Host Isolated", 9:"Network Administratively Prohibited",
+                   10:"Host Administratively Prohibited",
+                   11:"Network Unreachable for ToS", 12:"Host Unreachable for ToS",
+                   13:"Communication Administratively Prohibited",
+                   14:"Host Precedence Violation", 15:"Precedence Cutoff in Effect"})
+
 def checksum(str):
     csum = 0
     countTo = (len(str) / 2) * 2
@@ -45,6 +55,10 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         recPacket, addr = mySocket.recvfrom(1024)
         icmpHeader= recPacket[20:28]
         type, code, checksum, packID, sequence = struct.unpack("bbHHh", icmpHeader)
+
+        #If the destination was unreachable, print the appropriate error message
+        if type == 3:
+            print errormessage[code]
 
         #Fetch the ICMP header from the IP packet
         if packID == ID:
@@ -133,7 +147,7 @@ def ping(host, timeout=1):
         #print some stats
         if totalcount > 0: #dont divide by 0 pls
             rate = float(timeouts/totalcount)
-
+        print"Count: " + str(totalcount)
         print"Min RTT: " + str(min)
         print"Max RTT: " + str(max)
         print"Average RTT: " + str(delay / count)
