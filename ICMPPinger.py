@@ -52,7 +52,21 @@ def build_packet():
     # Append checksum to the header.
     # Don’t send the packet yet , just return the final packet in this function.
     # So the function ending should look like this
+    newCsum= 0
+    newID= os.getpid() & 0xFFFF
 
+    header=struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, newCsum, newID, 1)
+    data=struct.pack('b', time.time())
+
+    newCsum=checksum(header + data)
+
+    if sys.platform == 'darwin':
+        #darwin refers to Mac OS X
+        newCsum= socket.htons(newCsum) & 0xffff
+        #Convert 16-bit integers from host to network byte order.
+    else:
+        newCsum = socket.htons(newCsum)
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, newCsum, newID, 1)
 
     packet = header + data
     return packet
