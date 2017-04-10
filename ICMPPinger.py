@@ -39,7 +39,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
         if whatReady[0] == []: # Timeout
-            return "Request timed out."
+            return -1
 
         timeReceived = time.time()
         recPacket, addr = mySocket.recvfrom(1024)
@@ -54,7 +54,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
-            return "Request timed out."
+            return -1
 
 
 def sendOnePing(mySocket, destAddr, ID):
@@ -95,8 +95,11 @@ def ping(host, timeout=1):
     #timeout=1 means: If one second goes by without a reply from the server, ping or pong is lost
 
     #setting up thingies
+    rate = 0
     delay = 0
-    count = 0
+    count = 0      #used for geting avg RTT
+    totalcount = 0 #used for counting timeouts
+    timeouts = 0
     min = 0
     max = 0
 
@@ -105,23 +108,39 @@ def ping(host, timeout=1):
     print ""
 
     #Send ping requests to a server separated by approximately one second
-    while count < 10 :
-        count += 1
+    while 1:
         tempDelay = doOnePing(dest, timeout)
-        delay += tempDelay
 
-        #update min and max
-        if tempDelay < min:
+        #get an accurate initial value for min
+        if count == 0:
             min = tempDelay
-        if tempDelay > max:
-            max = tempDelay
+
+        #check if we time out
+        if tempDelay == -1:
+            print "Request Timed out."
+            timeouts += 1
+            totalcount = count + 1 #we need this so we can get an accurate Avg RTT and an accurate timeout rate
+        else:
+            count += 1
+            delay += tempDelay
+
+            #update min and max
+            if tempDelay < min:
+                min = tempDelay
+            if tempDelay > max:
+                max = tempDelay
+
+        #print some stats
+        if totalcount > 0: #dont divide by 0 pls
+            rate = float(timeouts/totalcount)
+
+        print"Min RTT: " + str(min)
+        print"Max RTT: " + str(max)
+        print"Average RTT: " + str(delay / count)
+        print"Timeout rate: " + str(rate)
+        print""
 
         time.sleep(1)#nap time
-
-    print"Min RTT: " + str(min)
-    print"Max RTT: " + str(max)
-    print"Average RTT: " + str(delay/count)
-
-
     return delay
-ping("www.google.com")
+
+ping("www.xavier.edu")
