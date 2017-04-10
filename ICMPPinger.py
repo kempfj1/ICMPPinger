@@ -8,6 +8,9 @@ import binascii
 
 
 ICMP_ECHO_REQUEST = 8
+MAX_HOPS = 30
+TIMEOUT = 2.0
+TRIES = 2
 
 #Make a table of ICMP error codes for easy lookup
 errormessage = dict({0:"Destination Network Unreachable", 1:"Destination Host Unreachable",
@@ -41,6 +44,18 @@ def checksum(str):
     answer = answer >> 8 | (answer << 8 & 0xff00)
     return answer
 
+def build_packet():
+    # In the sendOnePing() method of the ICMP Ping exercise ,firstly the header of our
+    # packet to be sent was made, secondly the checksum was appended to the header and
+    # then finally the complete packet was sent to the destination.
+    # Make the header in a similar way to the ping exercise.
+    # Append checksum to the header.
+    # Don’t send the packet yet , just return the final packet in this function.
+    # So the function ending should look like this
+
+
+    packet = header + data
+    return packet
 
 def receiveOnePing(mySocket, ID, timeout, destAddr):
     timeLeft = timeout
@@ -56,6 +71,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         icmpHeader= recPacket[20:28]
         type, code, checksum, packID, sequence = struct.unpack("bbHHh", icmpHeader)
 
+
         #If the destination was unreachable, print the appropriate error message
         if type == 3:
             print errormessage[code]
@@ -69,7 +85,6 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
             return -1
-
 
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
@@ -92,7 +107,6 @@ def sendOnePing(mySocket, destAddr, ID):
     #Both LISTS and TUPLES consist of a number of objects
     #which can be referenced by their position number within the object
 
-
 def doOnePing(destAddr, timeout):
     icmp = getprotobyname("icmp")
 #SOCK_RAW is a powerful socket type. For more details see:
@@ -104,6 +118,51 @@ def doOnePing(destAddr, timeout):
     mySocket.close()
     return delay
 
+def get_route(hostname):
+    timeLeft = TIMEOUT
+    for ttl in xrange(1, MAX_HOPS):
+        for tries in xrange(TRIES):
+        destAddr = gethostbyname(hostname)
+        # Fill in start
+        # Make a raw socket named mySocket
+        # Fill in end
+        mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
+        mySocket.settimeout(TIMEOUT)
+        try:
+            d = build_packet()
+            mySocket.sendto(d, (hostname, 0))
+            t = time.time()
+            startedSelect = time.time()
+            whatReady = select.select([mySocket], [], [], timeLeft)
+            howLongInSelect = (time.time() - startedSelect)
+            if whatReady[0] == []:  # Timeout
+                print " * * * Request timed out."
+            recvPacket, addr = mySocket.recvfrom(1024)
+            timeReceived = time.time()
+            timeLeft = timeLeft - howLongInSelect
+            if timeLeft <= 0:
+                print " * * * Request timed out."
+        except timeout:
+            continue
+        else:
+            if type == 11:
+                bytes = struct.calcsize("d")
+                timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
+                print " %d rtt=%.0f ms %s" % (ttl,(timeReceived - t) * 1000, addr[0])
+            elif type == 3:
+                bytes = struct.calcsize("d")
+                timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
+                print " %d rtt=%.0f ms %s" % (ttl,(timeReceived - t) * 1000, addr[0])
+            elif type == 0:
+                bytes = struct.calcsize("d")
+                timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
+                print " %d rtt=%.0f ms %s" % (ttl,(timeReceived - timeSent) * 1000, addr[0])
+                return
+            else:
+                print "error"
+            break
+        finally:
+            mySocket.close()
 
 def ping(host, timeout=1):
     #timeout=1 means: If one second goes by without a reply from the server, ping or pong is lost
@@ -146,12 +205,12 @@ def ping(host, timeout=1):
 
         #print some stats
         if totalcount > 0: #dont divide by 0 pls
-            rate = float(timeouts/totalcount)
-        print"Count: " + str(totalcount)
+            rate = float(timeouts/totalcount) * 100 #figure out the timeout rate in %
+
         print"Min RTT: " + str(min)
         print"Max RTT: " + str(max)
         print"Average RTT: " + str(delay / count)
-        print"Timeout rate: " + str(rate)
+        print"Timeout rate: " + str(rate) + "%"
         print""
 
         time.sleep(1)#nap time
