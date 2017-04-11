@@ -59,12 +59,13 @@ def build_packet():
         newCsum = htons(newCsum) & 0xffff
     else:
         newCsum = htons(newCsum)
+
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, newCsum, newID, 1)
 
     packet = header + data
     return packet
 
-
+#This one... uh... receives a ping.
 def receiveOnePing(mySocket, ID, timeout, destAddr):
     timeLeft = timeout
     while 1:
@@ -125,16 +126,16 @@ def doOnePing(destAddr, timeout):
     mySocket.close()
     return delay
 
-
+#Traces a route to the target host
 def get_route(hostname):
     icmp = getprotobyname("icmp")
     timeLeft = TIMEOUT
     for ttl in xrange(1, MAX_HOPS):
         for tries in xrange(TRIES):
             destAddr = gethostbyname(hostname)
-            # Fill in start
+
             mySocket = socket(AF_INET, SOCK_RAW, icmp)
-            # Fill in end
+
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
             mySocket.settimeout(TIMEOUT)
             try:
@@ -230,6 +231,26 @@ def ping(host, timeout=1):
         time.sleep(1)  #nap time
     return delay
 
+#Takes some user input and starts the program
+def main():
+    while 1:
+        choice = raw_input("Ping(1), Traceroute(2)\n")
+        host = raw_input("Host name: ")
 
+        if choice == '1':
+            print "Pinging " + host
+            ping(host)
+            continue
+        elif choice == '2':
+            print "Route to: " + host
+            get_route(host)
+            continue
+        elif choice != '1' & choice != '2':
+            print "Come on, man. Gimme a number"
+            continue
+
+
+
+main()
 #ping("www.xavier.edu")
-get_route("www.xavier.edu")
+#get_route("www.google.com")
