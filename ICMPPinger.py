@@ -234,20 +234,25 @@ def ping(host, timeout=1):
 #Takes some user input and starts the program
 def main():
     while 1:
-        choice = raw_input("Ping(1), Traceroute(2)\n")
-        host = raw_input("Host name: ")
+        try:
+            choice = raw_input("Ping(1), Traceroute(2)\n")
+            host = raw_input("Host name: ")
 
-        if choice == '1':
-            print "Pinging " + host
-            ping(host)
-            continue
-        elif choice == '2':
-            print "Route to: " + host
-            get_route(host)
-            continue
-        elif choice != '1' & choice != '2':
-            print "Come on, man. Gimme a number"
-            continue
+            if choice == '1':
+                print "Pinging " + host
+                ping(host)
+                continue
+            elif choice == '2':
+                print "Route to: " + host
+                get_route(host)
+                continue
+            elif choice != '1' & choice != '2':
+                print "Come on, man. Gimme a number"
+                continue
+        except:
+            print "Gimme a real host"
+
+
 
 
 
