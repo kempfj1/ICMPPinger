@@ -249,7 +249,7 @@ def main():
             elif choice != '1' & choice != '2':
                 print "Come on, man. Gimme a number"
                 continue
-        except:
+        except gaierror:
             print "Gimme a real host"
 
 
